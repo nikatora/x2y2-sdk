@@ -61,7 +61,7 @@ export type CancelPayload = {
 export type BuyPayload = {
   network: Network
   signer: ethers.Signer
-
+  recipientAddress: string
   tokenAddress: string
   tokenId: string
   price: string
@@ -70,7 +70,7 @@ export type BuyPayload = {
 export type BuyOrderPayload = {
   network: Network
   signer: ethers.Signer
-
+  recipientAddress: string
   order: Order
   payback?: number | undefined
 }
@@ -98,7 +98,7 @@ export type CancelOfferPayload = {
 export type AcceptOfferPayload = {
   network: Network
   signer: ethers.Signer
-
+  recipientAddress: string
   offer: Order
   tokenId: string | undefined
 }
@@ -323,7 +323,7 @@ export async function cancel(
 async function acceptOrder(
   network: Network,
   signer: ethers.Signer,
-  recipientAddress: string,
+  recipientAddress: string = "0x0",
   op: number,
   orderId: number,
   currency: string,
@@ -334,7 +334,7 @@ async function acceptOrder(
   callOverrides: ethers.Overrides = {}
 ) {
   const apiClient: APIClient = getSharedAPIClient(network)
-  const accountAddress = recipientAddress;
+  const accountAddress = recipientAddress == "0x0" ? await signer.getAddress() : recipientAddress;
 
   const runInput: RunInput | undefined = await apiClient.fetchOrderSign(
     accountAddress,
@@ -378,7 +378,7 @@ export async function buy(
   {
     network,
     signer,
-
+    recipientAddress = "0x0",
     tokenAddress,
     tokenId,
     price,
@@ -402,6 +402,7 @@ export async function buy(
   return await acceptOrder(
     network,
     signer,
+    recipientAddress,
     OP_COMPLETE_SELL_OFFER,
     order.id,
     order.currency,
@@ -417,13 +418,13 @@ export async function buyOrder(
   {
     network,
     signer,
-
+    recipientAddress = "0x0",
     order,
     payback,
   }: BuyOrderPayload,
   callOverrides: ethers.Overrides = {}
 ) {
-  const accountAddress = await signer.getAddress()
+  const accountAddress = recipientAddress == "0x0" ? await signer.getAddress() : recipientAddress;
 
   if (
     !(order.id && order.price && order.token) ||
@@ -438,6 +439,7 @@ export async function buyOrder(
   return await acceptOrder(
     network,
     signer,
+    recipientAddress,
     OP_COMPLETE_SELL_OFFER,
     order.id,
     order.currency,
@@ -533,7 +535,7 @@ export async function acceptOffer(
   {
     network,
     signer,
-
+    recipientAddress = "0x0",
     offer,
     tokenId,
   }: AcceptOfferPayload,
@@ -544,6 +546,7 @@ export async function acceptOffer(
   return await acceptOrder(
     network,
     signer,
+    recipientAddress,
     OP_COMPLETE_BUY_OFFER,
     offer.id,
     offer.currency,
