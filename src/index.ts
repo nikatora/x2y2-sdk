@@ -323,7 +323,7 @@ export async function cancel(
 async function acceptOrder(
   network: Network,
   signer: ethers.Signer,
-
+  recipientAddress: string,
   op: number,
   orderId: number,
   currency: string,
@@ -334,7 +334,7 @@ async function acceptOrder(
   callOverrides: ethers.Overrides = {}
 ) {
   const apiClient: APIClient = getSharedAPIClient(network)
-  const accountAddress = await signer.getAddress()
+  const accountAddress = recipientAddress;
 
   const runInput: RunInput | undefined = await apiClient.fetchOrderSign(
     accountAddress,
